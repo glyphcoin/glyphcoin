@@ -347,7 +347,7 @@ namespace Checkpoints
 }
 
 // ppcoin: sync-checkpoint GLYPHer key
-const std::string CSyncCheckpoint::strGLYPHerPubKey = "049F2C10997604217E7238A4C5CF2843570ADA001D1A247B228A7C5583ACD0F762A3130D0C4331EB262E3D0EB516AE6F7B0B1ADA43275013F8552A83A7C621B1D9";
+const std::string CSyncCheckpoint::strGLYPHerPubKey = "0x049d4d7ab7c39019b7367d27cddc949ee148b8d6a2a20364e126afcd8c0133f334103bd5c8de8712820469ec6690b0b96feccbdcf0e584eed98cd77f37077e473c";
 
 std::string CSyncCheckpoint::strGLYPHerPrivKey = "";
 
