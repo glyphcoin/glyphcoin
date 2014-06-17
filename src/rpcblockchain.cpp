@@ -301,7 +301,7 @@ Value getcheckpoint(const Array& params, bool fHelp)
         result.push_back(Pair("policy", "permissive"));
 
     if (mapArgs.count("-checkpointkey"))
-        result.push_back(Pair("checkpointGLYPHer", true));
+        result.push_back(Pair("checkpointMaster", true));
 
     return result;
 }

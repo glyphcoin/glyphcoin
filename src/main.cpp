@@ -2314,7 +2314,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     printf("ProcessBlock: ACCEPTED\n");
 
     // ppcoin: if responsible for sync-checkpoint send it
-    if (pfrom && !CSyncCheckpoint::strGLYPHerPrivKey.empty())
+    if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty())
         Checkpoints::SendSyncCheckpoint(Checkpoints::AutoSelectSyncCheckpoint());
 
     return true;
@@ -2558,15 +2558,15 @@ bool LoadBlockIndex(bool fAllowNew)
 
     string strPubKey = "";
 
-    // if checkpoint GLYPHer key changed must reset sync-checkpoint
-    if (!txdb.ReadCheckpointPubKey(strPubKey) || strPubKey != CSyncCheckpoint::strGLYPHerPubKey)
+    // if checkpoint Master key changed must reset sync-checkpoint
+    if (!txdb.ReadCheckpointPubKey(strPubKey) || strPubKey != CSyncCheckpoint::strMasterPubKey)
     {
-        // write checkpoint GLYPHer key to db
+        // write checkpoint Master key to db
         txdb.TxnBegin();
-        if (!txdb.WriteCheckpointPubKey(CSyncCheckpoint::strGLYPHerPubKey))
-            return error("LoadBlockIndex() : failed to write new checkpoint GLYPHer key to db");
+        if (!txdb.WriteCheckpointPubKey(CSyncCheckpoint::strMasterPubKey))
+            return error("LoadBlockIndex() : failed to write new checkpoint Master key to db");
         if (!txdb.TxnCommit())
-            return error("LoadBlockIndex() : failed to commit new checkpoint GLYPHer key to db");
+            return error("LoadBlockIndex() : failed to commit new checkpoint Master key to db");
         if ((!fTestNet) && !Checkpoints::ResetSyncCheckpoint())
             return error("LoadBlockIndex() : failed to reset sync-checkpoint");
     }

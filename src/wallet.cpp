@@ -121,17 +121,17 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
         return false;
 
     CCrypter crypter;
-    CKeyingMaterial vGLYPHerKey;
+    CKeyingMaterial vMasterKey;
 
     {
         LOCK(cs_wallet);
-        BOOST_FOREACH(const GLYPHerKeyMap::value_type& pGLYPHerKey, mapGLYPHerKeys)
+        BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
         {
-            if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pGLYPHerKey.second.vchSalt, pGLYPHerKey.second.nDeriveIterations, pGLYPHerKey.second.nDerivationMethod))
+            if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pGLYPHerKey.second.vchCryptedKey, vGLYPHerKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
                 return false;
-            if (CCryptoKeyStore::Unlock(vGLYPHerKey))
+            if (CCryptoKeyStore::Unlock(vMasterKey))
                 return true;
         }
     }
@@ -147,33 +147,33 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         Lock();
 
         CCrypter crypter;
-        CKeyingMaterial vGLYPHerKey;
-        BOOST_FOREACH(GLYPHerKeyMap::value_type& pGLYPHerKey, mapGLYPHerKeys)
+        CKeyingMaterial vMasterKey;
+        BOOST_FOREACH(MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
         {
-            if(!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pGLYPHerKey.second.vchSalt, pGLYPHerKey.second.nDeriveIterations, pGLYPHerKey.second.nDerivationMethod))
+            if(!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pGLYPHerKey.second.vchCryptedKey, vGLYPHerKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
                 return false;
-            if (CCryptoKeyStore::Unlock(vGLYPHerKey))
+            if (CCryptoKeyStore::Unlock(vMasterKey))
             {
                 int64_t nStartTime = GetTimeMillis();
-                crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pGLYPHerKey.second.vchSalt, pGLYPHerKey.second.nDeriveIterations, pGLYPHerKey.second.nDerivationMethod);
-                pGLYPHerKey.second.nDeriveIterations = pGLYPHerKey.second.nDeriveIterations * (100 / ((double)(GetTimeMillis() - nStartTime)));
+                crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
+                pMasterKey.second.nDeriveIterations = pMasterKey.second.nDeriveIterations * (100 / ((double)(GetTimeMillis() - nStartTime)));
 
                 nStartTime = GetTimeMillis();
-                crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pGLYPHerKey.second.vchSalt, pGLYPHerKey.second.nDeriveIterations, pGLYPHerKey.second.nDerivationMethod);
-                pGLYPHerKey.second.nDeriveIterations = (pGLYPHerKey.second.nDeriveIterations + pGLYPHerKey.second.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
+                crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
+                pMasterKey.second.nDeriveIterations = (pMasterKey.second.nDeriveIterations + pMasterKey.second.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
 
-                if (pGLYPHerKey.second.nDeriveIterations < 25000)
-                    pGLYPHerKey.second.nDeriveIterations = 25000;
+                if (pMasterKey.second.nDeriveIterations < 25000)
+                    pMasterKey.second.nDeriveIterations = 25000;
 
-                printf("Wallet passphrase changed to an nDeriveIterations of %i\n", pGLYPHerKey.second.nDeriveIterations);
+                printf("Wallet passphrase changed to an nDeriveIterations of %i\n", pMasterKey.second.nDeriveIterations);
 
-                if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pGLYPHerKey.second.vchSalt, pGLYPHerKey.second.nDeriveIterations, pGLYPHerKey.second.nDerivationMethod))
+                if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                     return false;
-                if (!crypter.Encrypt(vGLYPHerKey, pGLYPHerKey.second.vchCryptedKey))
+                if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey))
                     return false;
-                CWalletDB(strWalletFile).WriteGLYPHerKey(pGLYPHerKey.first, pGLYPHerKey.second);
+                CWalletDB(strWalletFile).WriteMasterKey(pMasterKey.first, pMasterKey.second);
                 if (fWasLocked)
                     Lock();
                 return true;
@@ -251,49 +251,49 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     if (IsCrypted())
         return false;
 
-    CKeyingMaterial vGLYPHerKey;
+    CKeyingMaterial vMasterKey;
     RandAddSeedPerfmon();
 
-    vGLYPHerKey.resize(WALLET_CRYPTO_KEY_SIZE);
-    RAND_bytes(&vGLYPHerKey[0], WALLET_CRYPTO_KEY_SIZE);
+    vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
+    RAND_bytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
 
-    CGLYPHerKey kGLYPHerKey(nDerivationMethodIndex);
+    CMasterKey kMasterKey(nDerivationMethodIndex);
 
     RandAddSeedPerfmon();
-    kGLYPHerKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-    RAND_bytes(&kGLYPHerKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
+    kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+    RAND_bytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
 
     CCrypter crypter;
     int64_t nStartTime = GetTimeMillis();
-    crypter.SetKeyFromPassphrase(strWalletPassphrase, kGLYPHerKey.vchSalt, 25000, kGLYPHerKey.nDerivationMethod);
-    kGLYPHerKey.nDeriveIterations = 2500000 / ((double)(GetTimeMillis() - nStartTime));
+    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
+    kMasterKey.nDeriveIterations = 2500000 / ((double)(GetTimeMillis() - nStartTime));
 
     nStartTime = GetTimeMillis();
-    crypter.SetKeyFromPassphrase(strWalletPassphrase, kGLYPHerKey.vchSalt, kGLYPHerKey.nDeriveIterations, kGLYPHerKey.nDerivationMethod);
-    kGLYPHerKey.nDeriveIterations = (kGLYPHerKey.nDeriveIterations + kGLYPHerKey.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
+    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
+    kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + kMasterKey.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
 
-    if (kGLYPHerKey.nDeriveIterations < 25000)
-        kGLYPHerKey.nDeriveIterations = 25000;
+    if (kMasterKey.nDeriveIterations < 25000)
+        kMasterKey.nDeriveIterations = 25000;
 
-    printf("Encrypting Wallet with an nDeriveIterations of %i\n", kGLYPHerKey.nDeriveIterations);
+    printf("Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.nDeriveIterations);
 
-    if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kGLYPHerKey.vchSalt, kGLYPHerKey.nDeriveIterations, kGLYPHerKey.nDerivationMethod))
+    if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod))
         return false;
-    if (!crypter.Encrypt(vGLYPHerKey, kGLYPHerKey.vchCryptedKey))
+    if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
         return false;
 
     {
         LOCK(cs_wallet);
-        mapGLYPHerKeys[++nGLYPHerKeyMaxID] = kGLYPHerKey;
+        mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         if (fFileBacked)
         {
             pwalletdbEncryption = new CWalletDB(strWalletFile);
             if (!pwalletdbEncryption->TxnBegin())
                 return false;
-            pwalletdbEncryption->WriteGLYPHerKey(nGLYPHerKeyMaxID, kGLYPHerKey);
+            pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
-        if (!EncryptKeys(vGLYPHerKey))
+        if (!EncryptKeys(vMasterKey))
         {
             if (fFileBacked)
                 pwalletdbEncryption->TxnAbort();

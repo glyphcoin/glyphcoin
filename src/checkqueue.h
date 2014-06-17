@@ -17,9 +17,9 @@ template<typename T> class CCheckQueueControl;
   * The verifications are represented by a type T, which must provide an
   * operator(), returning a bool.
   *
-  * One thread (the GLYPHer) is assumed to push batches of verifications
+  * One thread (the Master) is assumed to push batches of verifications
   * onto the queue, where they are processed by N-1 worker threads. When
-  * the GLYPHer is done adding work, it temporarily joins the worker pool
+  * the Master is done adding work, it temporarily joins the worker pool
   * as an N'th worker, until all jobs are done.
   */
 template<typename T> class CCheckQueue {
@@ -30,17 +30,17 @@ private:
     // Worker threads block on this when out of work
     boost::condition_variable condWorker;
 
-    // GLYPHer thread blocks on this when out of work
-    boost::condition_variable condGLYPHer;
+    // Master thread blocks on this when out of work
+    boost::condition_variable condMaster;
 
     // The queue of elements to be processed.
     // As the order of booleans doesn't matter, it is used as a LIFO (stack)
     std::vector<T> queue;
 
-    // The number of workers (including the GLYPHer) that are idle.
+    // The number of workers (including the Master) that are idle.
     int nIdle;
 
-    // The total number of workers (including the GLYPHer).
+    // The total number of workers (including the Master).
     int nTotal;
 
     // The temporary evaluation result.
@@ -58,8 +58,8 @@ private:
     unsigned int nBatchSize;
 
     // Internal function that does bulk of the verification work.
-    bool Loop(bool fGLYPHer = false) {
-        boost::condition_variable &cond = fGLYPHer ? condGLYPHer : condWorker;
+    bool Loop(bool fMaster = false) {
+        boost::condition_variable &cond = fMaster ? condMaster : condWorker;
         std::vector<T> vChecks;
         vChecks.reserve(nBatchSize);
         unsigned int nNow = 0;
@@ -71,20 +71,20 @@ private:
                 if (nNow) {
                     fAllOk &= fOk;
                     nTodo -= nNow;
-                    if (nTodo == 0 && !fGLYPHer)
-                        // We processed the last element; inform the GLYPHer he can exit and return the result
-                        condGLYPHer.notify_one();
+                    if (nTodo == 0 && !fMaster)
+                        // We processed the last element; inform the Master he can exit and return the result
+                        condMaster.notify_one();
                 } else {
                     // first iteration
                     nTotal++;
                 }
                 // logically, the do loop starts here
                 while (queue.empty()) {
-                    if ((fGLYPHer || fQuit) && nTodo == 0) {
+                    if ((fMaster || fQuit) && nTodo == 0) {
                         nTotal--;
                         bool fRet = fAllOk;
                         // reset the status for new work later
-                        if (fGLYPHer)
+                        if (fMaster)
                             fAllOk = true;
                         // return the current status
                         return fRet;

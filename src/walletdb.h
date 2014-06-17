@@ -110,10 +110,10 @@ public:
         return true;
     }
 
-    bool WriteGLYPHerKey(unsigned int nID, const CGLYPHerKey& kGLYPHerKey)
+    bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
     {
         nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("mkey"), nID), kGLYPHerKey, true);
+        return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
     }
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript)

@@ -107,19 +107,19 @@ class CCryptoKeyStore : public CBasicKeyStore
 private:
     CryptedKeyMap mapCryptedKeys;
 
-    CKeyingMaterial vGLYPHerKey;
+    CKeyingMaterial vMasterKey;
 
     // if fUseCrypto is true, mapKeys must be empty
-    // if fUseCrypto is false, vGLYPHerKey must be empty
+    // if fUseCrypto is false, vMasterKey must be empty
     bool fUseCrypto;
 
 protected:
     bool SetCrypted();
 
     // will encrypt previously unencrypted keys
-    bool EncryptKeys(CKeyingMaterial& vGLYPHerKeyIn);
+    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
-    bool Unlock(const CKeyingMaterial& vGLYPHerKeyIn);
+    bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
     CCryptoKeyStore() : fUseCrypto(false)
@@ -138,7 +138,7 @@ public:
         bool result;
         {
             LOCK(cs_KeyStore);
-            result = vGLYPHerKey.empty();
+            result = vMasterKey.empty();
         }
         return result;
     }

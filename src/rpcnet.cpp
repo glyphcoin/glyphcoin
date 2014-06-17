@@ -78,7 +78,7 @@ Value sendalert(const Array& params, bool fHelp)
         throw runtime_error(
             "sendalert <message> <privatekey> <minver> <maxver> <priority> <id> [cancelupto]\n"
             "<message> is the alert text message\n"
-            "<privatekey> is hex string of alert GLYPHer private key\n"
+            "<privatekey> is hex string of alert Master private key\n"
             "<minver> is the minimum applicable internal client version\n"
             "<maxver> is the maximum applicable internal client version\n"
             "<priority> is integer priority number\n"

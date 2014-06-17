@@ -91,16 +91,16 @@ public:
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
 
 
-    typedef std::map<unsigned int, CGLYPHerKey> GLYPHerKeyMap;
-    GLYPHerKeyMap mapGLYPHerKeys;
-    unsigned int nGLYPHerKeyMaxID;
+    typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
+    MasterKeyMap mapMasterKeys;
+    unsigned int nMasterKeyMaxID;
 
     CWallet()
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         fFileBacked = false;
-        nGLYPHerKeyMaxID = 0;
+        nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
     }
@@ -110,7 +110,7 @@ public:
         nWalletMaxVersion = FEATURE_BASE;
         strWalletFile = strWalletFileIn;
         fFileBacked = true;
-        nGLYPHerKeyMaxID = 0;
+        nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
     }

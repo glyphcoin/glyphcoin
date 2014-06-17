@@ -18,7 +18,7 @@ class CAddrMan;
 class CBlockLocator;
 class CDiskBlockIndex;
 class CDiskTxPos;
-class CGLYPHerKey;
+class CMasterKey;
 class COutPoint;
 class CTxIndex;
 class CWallet;

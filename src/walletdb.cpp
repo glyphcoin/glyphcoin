@@ -335,16 +335,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             unsigned int nID;
             ssKey >> nID;
-            CGLYPHerKey kGLYPHerKey;
-            ssValue >> kGLYPHerKey;
-            if(pwallet->mapGLYPHerKeys.count(nID) != 0)
+            CMasterKey kMasterKey;
+            ssValue >> kMasterKey;
+            if(pwallet->mapMasterKeys.count(nID) != 0)
             {
-                strErr = strprintf("Error reading wallet database: duplicate CGLYPHerKey id %u", nID);
+                strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
                 return false;
             }
-            pwallet->mapGLYPHerKeys[nID] = kGLYPHerKey;
-            if (pwallet->nGLYPHerKeyMaxID < nID)
-                pwallet->nGLYPHerKeyMaxID = nID;
+            pwallet->mapMasterKeys[nID] = kMasterKey;
+            if (pwallet->nMasterKeyMaxID < nID)
+                pwallet->nMasterKeyMaxID = nID;
         }
         else if (strType == "ckey")
         {

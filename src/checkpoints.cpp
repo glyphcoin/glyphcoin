@@ -299,7 +299,7 @@ namespace Checkpoints
             return false;
 
         // Test signing successful, proceed
-        CSyncCheckpoint::strGLYPHerPrivKey = strPrivKey;
+        CSyncCheckpoint::strMasterPrivKey = strPrivKey;
         return true;
     }
 
@@ -311,9 +311,9 @@ namespace Checkpoints
         sMsg << (CUnsignedSyncCheckpoint)checkpoint;
         checkpoint.vchMsg = std::vector<unsigned char>(sMsg.begin(), sMsg.end());
 
-        if (CSyncCheckpoint::strGLYPHerPrivKey.empty())
-            return error("SendSyncCheckpoint: Checkpoint GLYPHer key unavailable.");
-        std::vector<unsigned char> vchPrivKey = ParseHex(CSyncCheckpoint::strGLYPHerPrivKey);
+        if (CSyncCheckpoint::strMasterPrivKey.empty())
+            return error("SendSyncCheckpoint: Checkpoint Master key unavailable.");
+        std::vector<unsigned char> vchPrivKey = ParseHex(CSyncCheckpoint::strMasterPrivKey);
         CKey key;
         key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
         if (!key.Sign(Hash(checkpoint.vchMsg.begin(), checkpoint.vchMsg.end()), checkpoint.vchSig))
@@ -346,16 +346,16 @@ namespace Checkpoints
     }
 }
 
-// ppcoin: sync-checkpoint GLYPHer key
-const std::string CSyncCheckpoint::strGLYPHerPubKey = "0x049d4d7ab7c39019b7367d27cddc949ee148b8d6a2a20364e126afcd8c0133f334103bd5c8de8712820469ec6690b0b96feccbdcf0e584eed98cd77f37077e473c";
+// ppcoin: sync-checkpoint Masterer key
+const std::string CSyncCheckpoint::strMasterPubKey = "0x049d4d7ab7c39019b7367d27cddc949ee148b8d6a2a20364e126afcd8c0133f334103bd5c8de8712820469ec6690b0b96feccbdcf0e584eed98cd77f37077e473c";
 
-std::string CSyncCheckpoint::strGLYPHerPrivKey = "";
+std::string CSyncCheckpoint::strMasterPrivKey = "";
 
 // ppcoin: verify signature of sync-checkpoint message
 bool CSyncCheckpoint::CheckSignature()
 {
     CKey key;
-    if (!key.SetPubKey(ParseHex(CSyncCheckpoint::strGLYPHerPubKey)))
+    if (!key.SetPubKey(ParseHex(CSyncCheckpoint::strMasterPubKey)))
         return error("CSyncCheckpoint::CheckSignature() : SetPubKey failed");
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
         return error("CSyncCheckpoint::CheckSignature() : verify signature failed");
