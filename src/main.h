@@ -29,7 +29,7 @@ class CNode;
 
 // static const int LAST_POW_BLOCK = 360000;
 // Coin count lowered to roughly 2m total in POW per community vote, ending at block 38,000 then total POS
-static const int LAST_POW_BLOCK = 38000;
+static const int LAST_POW_BLOCK = 50000;
 
 
 
